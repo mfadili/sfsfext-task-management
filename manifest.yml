@@ -1,0 +1,37 @@
+---
+applications:
+# The sample application.
+- name: task-management
+  instances: 1
+  memory: 896M
+  buildpacks: 
+    - sap_java_buildpack
+  routes:
+    - route: task-management-((ID)).cfapps.((REGION_HOST))
+  path: task-management-app/target/task-management-app.jar
+  services:
+    - xsuaa
+    - destination
+    - sap-successfactors-extensibility
+
+# Application Router as web server
+- name: approuter-task-management
+  path: approuter
+  buildpacks: 
+    - nodejs_buildpack
+  memory: 128M
+  routes:
+    - route: task-management-web-((ID)).cfapps.((REGION_HOST))
+  services:
+    - xsuaa
+  env:
+    destinations: >
+      [
+        {"name":"token-destination",
+         "url":"https://task-management-((ID)).cfapps.((REGION_HOST))",
+         "forwardAuthToken": true}
+      ]
+  properties:
+    httpHeaders:
+    - X-Frame-Options: "[ { \"X-Frame-Options\": \"ALLOW-FROM hana.ondemand.com\" }, { \"Test-Additional-Header\": \"1\" } ]"    
+
